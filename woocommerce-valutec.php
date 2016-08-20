@@ -12,8 +12,6 @@ Text Domain: wc-valutec
 // * i18n
 // * don't subract from the order total, just credit card charge total
 // * customizable templates
-// * readme.txt
-// * submit it
 defined('ABSPATH') or die('Nope');
 
 // The card probably doesn't exist if there are many attempts to resolve it,
