@@ -12,7 +12,6 @@ Text Domain: wc-valutec
 // * i18n
 // * don't subract from the order total, just credit card charge total
 // * customizable templates
-// * PHP 5.3 support
 // * readme.txt
 // * submit it
 defined('ABSPATH') or die('Nope');
@@ -65,26 +64,26 @@ add_action('plugins_loaded', function () {
 
 
       $this->init_form_fields();
-      add_action('woocommerce_update_options_integration_' .  $this->id, [$this, 'process_admin_options']);
+      add_action('woocommerce_update_options_integration_' .  $this->id, array($this, 'process_admin_options'));
     }
 
     public function init_form_fields() {
-      $this->form_fields = [
-        'client_key' => [
+      $this->form_fields = array(
+        'client_key' => array(
           'title' => 'Client Key',
           'type' => 'text',
           'description' => 'Given to you by Valutec, should look like a GUID',
           'desc_tip' => true,
           'default' => ''
-        ],
-        'terminal_id' => [
+        ),
+        'terminal_id' => array(
           'title' => 'Terminal ID',
           'type' => 'text',
           'description' => 'Should be six integers',
           'desc_tip' => true,
           'default' => ''
-        ]
-      ];
+        )
+      );
     }
   }
 
@@ -150,7 +149,7 @@ add_action('plugins_loaded', function () {
     // Card transactions
     // -----------------
 
-    $api_call = function ($method, $id, $card, $extra_args = []) use ($vc) {
+    $api_call = function ($method, $id, $card, $extra_args = array()) use ($vc) {
       $ch = curl_init();
       $args = array_merge(array(
         'ClientKey' => $vc->get_option('client_key'),
@@ -309,13 +308,13 @@ add_action('plugins_loaded', function () {
 
     // Charge the gift card before other payments
     add_action('woocommerce_checkout_order_processed', function ($id, $posted) use ($do_sale, $refund_cards, $tid) {
-      $cards = WC()->session->get('gift_cards') ?: [];
+      $cards = WC()->session->get('gift_cards') ?: array();
 
       if (empty($cards)) return;
 
       $failed = false;
       $order = wc_get_order($id);
-      $transactions = [];
+      $transactions = array();
 
       // Charge each card
       foreach ($cards as $code => $charge_amount) {
@@ -327,7 +326,7 @@ add_action('plugins_loaded', function () {
           break;
         } else {
           $order->add_order_note(sprintf('Charged %g to gift card %s (tid: %s, auth: %s)', $charge_amount, $code, $transaction_id, $auth_code));
-          $transactions[$code] = ['auth_code' => $auth_code, 'amount' => $charge_amount];
+          $transactions[$code] = array('auth_code' => $auth_code, 'amount' => $charge_amount);
         }
       }
 
@@ -344,7 +343,7 @@ add_action('plugins_loaded', function () {
     
     // If the order failed, restore the gift card
     add_action('woocommerce_order_status_changed', function ($id, $old_status, $new_status) use ($clog, $refund_cards) {
-      $cards = WC()->session->get('gift_cards') ?: [];
+      $cards = WC()->session->get('gift_cards') ?: array();
 
       if (count($cards) > 0) {
         $clog('order went from %s to %s', $old_status, $new_status);
@@ -355,7 +354,7 @@ add_action('plugins_loaded', function () {
 
         // Payment complete, gift cards are now in the DB
         if ($new_status === 'processing') {
-          WC()->session->set('gift_cards', []);
+          WC()->session->set('gift_cards', array());
         }
       }
     }, 10, 3);
@@ -364,7 +363,7 @@ add_action('plugins_loaded', function () {
     // --------------------------------------
 
     add_filter('woocommerce_calculated_total', function ($total) use ($get_balance) {
-      $cards = WC()->session->get('gift_cards') ?: [];
+      $cards = WC()->session->get('gift_cards') ?: array();
       $charge_amount_total = 0;
 
       foreach ($cards as $code => $charge_amount) {
@@ -388,7 +387,7 @@ add_action('plugins_loaded', function () {
     // ----------------------------------
 
     $add_gift_card_lines = function () use ($get_balance, $shorten) { 
-      $cards = WC()->session->get('gift_cards') ?: [];
+      $cards = WC()->session->get('gift_cards') ?: array();
       $url = is_checkout() ? WC()->cart->get_checkout_url() : WC()->cart->get_cart_url();
 
       if (count($cards) > 0) {
@@ -415,13 +414,13 @@ add_action('plugins_loaded', function () {
 
     add_filter('woocommerce_get_order_item_totals', function ($rows, $order) use ($shorten) {
       $transactions = get_post_meta($order->id, '_wc_valutec_transactions', true) ?: array();
-      $coupon_entries = [];
+      $coupon_entries = array();
 
       foreach ($transactions as $code => $t) {
-        $coupon_entries['giftcard-' . $code] = [
+        $coupon_entries['giftcard-' . $code] = array(
           'label' => 'Gift card ending in ' . $shorten($code),
           'value' => '-' . wc_price($t['amount'])
-        ];
+        );
       }
 
       return array_slice($rows, 0, count($rows) - 1, true)
@@ -449,7 +448,7 @@ add_action('plugins_loaded', function () {
     add_action('wp_loaded', function () use ($is_gift_card, $get_balance) {
       if (!empty($_POST['update_cart']) && !empty($_POST['gift_card_code'])) {
         if ($is_gift_card($code = $_POST['gift_card_code'])) {
-          $cards = WC()->session->get('gift_cards') ?: [];
+          $cards = WC()->session->get('gift_cards') ?: array();
           if (isset($cards[$code])) {
             wc_add_notice('That gift card has already been applied to the cart.');
           } else {
@@ -479,7 +478,7 @@ add_action('plugins_loaded', function () {
       }
 
       if (!empty($_GET['remove_gift_card'])) {
-        $cards = WC()->session->get('gift_cards') ?: [];
+        $cards = WC()->session->get('gift_cards') ?: array();
         $code = $_GET['remove_gift_card'];
         if (isset($cards[$code])) {
           unset($cards[$code]);
