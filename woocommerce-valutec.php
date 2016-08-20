@@ -32,7 +32,7 @@ define('GIFTCARD_CACHE_TIMEOUT', 60 * 5);
 
 add_action('plugins_loaded', function () {
   if (!class_exists('WC_Integration')) {
-    if (WP_DEBUG === true) error_log('could not load because WooCommerce was not found');
+    if (WP_DEBUG === true) error_log('giftcard: could not load because WooCommerce was not found');
     return;
   }
 
