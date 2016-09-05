@@ -2,7 +2,7 @@
 /*
 Plugin Name: Valutec Gift Cards for WooCommerce
 Description: Integrates the WooCommerce checkout with the Valutec payment API
-Version:     1.0.0
+Version:     1.0.1
 Author:      Caleb Hearon
 Author URI:  http://chearon.net/blog/
 Text Domain: wc-valutec
