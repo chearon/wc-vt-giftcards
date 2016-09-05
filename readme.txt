@@ -34,3 +34,9 @@ I will be primarily updating the readme in the main [repository on GitHub](https
 2. Enter your Client ID and Terminal ID (given to you by Valutec) by visiting Woocommcerce > Settings > Integration > Valutec Gift Cards
 3. Make sure that Valutec has the following features enabled on your account: Transaction_Void, Transaction_Sale, and Transaction_CardBalance. The balance is only checked to know how much to deduct, users won't see the total on their card unless the order exceeds that amount.
 4. (optional) It is highly recommended to install either Memcached (preferred) or APC. This enables extra security features so that people can't try to guess gift cards or otherwise abuse the Valutec API and get your account disabled. You can check which caching layer the plugin is using by going to the settings screen described above and looking at where it says Cache type below the description. APC and Memcached are detected automatically and don't require any configuration
+
+== FAQ ==
+
+= Why does the order total get deducted instead of the gift card being a payment gateway? =
+
+Ideally this plugin would function as a payment gateway, but if I did that, customers wouldn't be able to pay with both the gift card and a credit card. That's because WooCommerce doesn't support split tender yet.
