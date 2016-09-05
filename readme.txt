@@ -30,7 +30,7 @@ I will be primarily updating the readme in the main [repository on GitHub](https
 
 **Only PHP 5.3 and newer is supported**
 
-1. Extract the plugin folder (woocommerce-valutec) into /wp-content/plugins just like you would any other plugin
+1. Extract the plugin folder (wc-vt-giftcards) into /wp-content/plugins just like you would any other plugin
 2. Enter your Client ID and Terminal ID (given to you by Valutec) by visiting Woocommcerce > Settings > Integration > Valutec Gift Cards
 3. Make sure that Valutec has the following features enabled on your account: Transaction_Void, Transaction_Sale, and Transaction_CardBalance. The balance is only checked to know how much to deduct, users won't see the total on their card unless the order exceeds that amount.
 4. (optional) It is highly recommended to install either Memcached (preferred) or APC. This enables extra security features so that people can't try to guess gift cards or otherwise abuse the Valutec API and get your account disabled. You can check which caching layer the plugin is using by going to the settings screen described above and looking at where it says Cache type below the description. APC and Memcached are detected automatically and don't require any configuration
