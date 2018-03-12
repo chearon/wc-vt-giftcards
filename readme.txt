@@ -3,7 +3,7 @@ Author: Caleb Hearon
 Tags: woocommerce
 Requires at least: 4.4
 Tested up to: 4.9.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 
 Allow people to pay with Valutec gift cards at the checkout screen
 
@@ -14,6 +14,11 @@ This plugin lets people pay for orders with a gift card from Valutec. They can e
 I will be primarily updating the readme in the main [repository on GitHub](https://github.com/chearon/wc-vt-giftcards)
 
 == Changelog ==
+
+= 1.0.2 =
+* Update to use POST since Valutec is deprecating GET
+
+= 1.0.1 =
 
 = 1.0.0 =
 * First released as open source plugin
