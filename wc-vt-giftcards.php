@@ -6,6 +6,9 @@ Version:     1.0.1
 Author:      Caleb Hearon
 Author URI:  http://chearon.net/blog/
 Text Domain: wc-valutec
+
+WC requires at least: 2.3
+WC tested up to: 3.3.3
 */
 
 // TODO:

@@ -2,7 +2,7 @@
 Author: Caleb Hearon
 Tags: woocommerce
 Requires at least: 4.4
-Tested up to: 4.5
+Tested up to: 4.9.4
 Stable tag: 1.0.1
 
 Allow people to pay with Valutec gift cards at the checkout screen
