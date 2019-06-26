@@ -433,13 +433,18 @@ add_action('plugins_loaded', function () {
     // Woo integration - gift card form
     // --------------------------------
 
-    add_action('woocommerce_after_cart_totals', function () { // TODO what if plugin is deactivated during order
+    $cart_hook = apply_filters('woocommerce_valutec_gift_cards_hook', 'woocommerce_after_cart_totals');
+
+    add_action($cart_hook, function () { // TODO what if plugin is deactivated during order
       if (WC()->cart->needs_payment()) {
+        $button_classes = apply_filters('woocommerce_valutec_gift_cards_btnclass', ['apply-gift-card', 'button']);
+        do_action('woocommerce_valutec_gift_cards_before_form');
         ?><form action="<?php echo esc_url( WC()->cart->get_cart_url() ); ?>" method="post" class="apply-gift-card">
           <input type="text" name="gift_card_code" value="" placeholder="Gift card number"/>
-          <input type="submit" class="apply-gift-card button" name="update_cart" value="Apply gift card" />
+          <input type="submit" class="<?php echo join(' ', $button_classes) ?>" name="update_cart" value="Apply gift card" />
           <?php wp_nonce_field( 'woocommerce-cart' ); ?>
         </form><?php
+        do_action('woocommerce_valutec_gift_cards_after_form');
       }
     });
 
