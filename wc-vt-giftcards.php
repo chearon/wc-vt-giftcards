@@ -40,14 +40,14 @@ add_action('plugins_loaded', function () {
   // -----------------------------------------------------------
 
   if (class_exists('Memcached')) {
-    require_once ('cache/memcached.php');
+    require_once('cache/memcached.php');
   } else if (extension_loaded('apc') && ini_get('apc.enabled')) {
-    require_once ('cache/apc.php');
+    require_once('cache/apc.php');
   } else {
-    require_once ('cache/basic.php');
+    require_once('cache/basic.php');
   }
 
-  // WooCommerce Integration - the plugin frontend
+  // WooCommerce Integration - the plugin frontend 
   // ---------------------------------------------
 
   class WC_Integration_Valutec extends WC_Integration {
@@ -107,7 +107,7 @@ add_action('plugins_loaded', function () {
     // -----------------
 
     $tid = function () {
-      for ($i = 1, $s = rand() . '';$i < 10;++$i) $s = rand() . '';
+      for ($i = 1, $s = rand() . ''; $i < 10; ++$i) $s = rand() . '';
       return $s;
     };
 
