@@ -38,7 +38,7 @@ add_action('plugins_loaded', function () {
 
   // Cache layer - uses memcached or APC, or dumb implementation
   // -----------------------------------------------------------
-  
+
   if (class_exists('Memcached')) {
     require_once ('cache/memcached.php');
   } else if (extension_loaded('apc') && ini_get('apc.enabled')) {
@@ -49,23 +49,23 @@ add_action('plugins_loaded', function () {
 
   // WooCommerce Integration - the plugin frontend
   // ---------------------------------------------
-  
+
   class WC_Integration_Valutec extends WC_Integration {
     public function __construct() {
       $this->id = 'wc-valutec';
       $this->method_title = 'Valutec Gift Cards';
-      $this->method_description = '<p>Integrates WooCommerce payments with ' 
-	    . 'Valutec\'s tender API. Just paste the API keys that Valutec gives ' 
-	    . 'you into the forms below. Customers can enter gift cards in the ' 
-	    . 'cart screen and the total will be adjusted and the card charged at ' 
-	    . 'checkout. Notes are added to your order in the backend so that you ' 
-	    . 'have the transaction IDs.</p>'
-	    . ''
-	    . '<p>Cache type: <code>' . WC_Valutec_Cache::$type . '</code></p>';
+      $this->method_description = '<p>Integrates WooCommerce payments with '
+        . 'Valutec\'s tender API. Just paste the API keys that Valutec gives '
+        . 'you into the forms below. Customers can enter gift cards in the '
+        . 'cart screen and the total will be adjusted and the card charged at '
+        . 'checkout. Notes are added to your order in the backend so that you '
+        . 'have the transaction IDs.</p>'
+        . ''
+        . '<p>Cache type: <code>' . WC_Valutec_Cache::$type . '</code></p>';
 
 
       $this->init_form_fields();
-      add_action('woocommerce_update_options_integration_' . $this->id, array($this, 'process_admin_options'));
+      add_action('woocommerce_update_options_integration_' .  $this->id, array($this, 'process_admin_options'));
     }
 
     public function init_form_fields() {
@@ -95,7 +95,7 @@ add_action('plugins_loaded', function () {
 
   // Begin hooks
   // -----------
-  
+
   add_action('woocommerce_init', function ($wc) {
     global $woocommerce;
 
@@ -105,7 +105,7 @@ add_action('plugins_loaded', function () {
 
     // Utility functions
     // -----------------
-	
+
     $tid = function () {
       for ($i = 1, $s = rand() . '';$i < 10;++$i) $s = rand() . '';
       return $s;
@@ -127,7 +127,7 @@ add_action('plugins_loaded', function () {
 
     // Rate limiting
     // -------------
-	
+
     $check_card_tries = function ($code) use ($mc) {
       return GIFTCARD_MAX_TRIES_PER_CARD >= (int)$mc->get('giftcard-card-tries-' . $code);
     };
@@ -149,7 +149,7 @@ add_action('plugins_loaded', function () {
 
     // Card transactions
     // -----------------
-	
+
     $api_call = function ($method, $id, $card, $extra_args = array()) use ($vc) {
       $ch = curl_init();
 
@@ -183,7 +183,7 @@ add_action('plugins_loaded', function () {
         curl_close($ch);
         try {
           return new SimpleXMLElement($str);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
           return false;
         }
       } else {
@@ -192,7 +192,7 @@ add_action('plugins_loaded', function () {
       }
     };
 
-    // Hits the API and returns a float of the new balance, or false if there was
+    // Hits the API and returns a float of the new balance, or false if there was 
     // an API error. To know if it was  successful, check the return value with
     // the $amount you passed in
     $api_do_sale = function ($code, $id, $amount, &$balance, &$auth_code) use ($clog, $api_call) {
@@ -221,7 +221,7 @@ add_action('plugins_loaded', function () {
     // caching layer with the amount on the card according to the api response
     $do_sale = function ($code, $id, $amount) use ($mc, $api_do_sale) {
       $success = $api_do_sale($code, $id, $amount, $new_balance, $auth_code);
-      if (!is_null($new_balance)) $mc->set('giftcard-balances-' . $code, serialize($new_balance) , GIFTCARD_CACHE_TIMEOUT);
+      if (!is_null($new_balance)) $mc->set('giftcard-balances-' . $code, serialize($new_balance), GIFTCARD_CACHE_TIMEOUT);
       return $success ? $auth_code : false;
     };
 
@@ -242,10 +242,10 @@ add_action('plugins_loaded', function () {
       }
     };
 
-    //
+    // 
     $void_sale = function ($code, $id, $auth_code) use ($mc, $api_void_sale) {
       $success = $api_void_sale($code, $id, $auth_code, $new_balance);
-      if (!is_null($new_balance)) $mc->set('giftcard-balances-' . $code, serialize($new_balance) , GIFTCARD_CACHE_TIMEOUT);
+      if (!is_null($new_balance)) $mc->set('giftcard-balances-' . $code, serialize($new_balance), GIFTCARD_CACHE_TIMEOUT);
       return $success;
     };
 
@@ -290,7 +290,7 @@ add_action('plugins_loaded', function () {
     $get_balance = function ($code) use ($mc, $api_get_balance, $tid) {
       if (($balance = $mc->get('giftcard-balances-' . $code)) === false) {
         $balance = $api_get_balance($code, $tid());
-        $mc->set('giftcard-balances-' . $code, serialize($balance) , GIFTCARD_CACHE_TIMEOUT);
+        $mc->set('giftcard-balances-' . $code, serialize($balance), GIFTCARD_CACHE_TIMEOUT);
       } else {
         $balance = unserialize($balance);
       }
@@ -300,16 +300,16 @@ add_action('plugins_loaded', function () {
 
     // Woo integration - order
     // -----------------------
-	
+
     // All cards must be refunded sometimes. The two cases as of this writing are
-    // when one of the cards fails and we have to rollback the whole order, or
+    // when one of the cards fails and we have to rollback the whole order, or 
     // when WC payment fails (credit card, paypal, etc...)
     $refund_cards = function ($order_id) use ($tid, $void_sale) {
       $transaction = get_post_meta($order_id, '_wc_valutec_transactions', true) ?: array();
       $order = wc_get_order($order_id);
 
       foreach ($transaction as $code => $t) {
-        if ($void_sale($code, $transaction_id = $tid() , $t['auth_code'])) {
+        if ($void_sale($code, $transaction_id = $tid(), $t['auth_code'])) {
           $note = sprintf('Rolling back %s on gift card %s (tid: %s)', $t['auth_code'], $code, $transaction_id);
         } else {
           $note = sprintf('Couldn\'t roll back %s on gift card %s (tid: %s). You need to do this manually.', $auth_code, $code, $transaction_id);
@@ -342,7 +342,7 @@ add_action('plugins_loaded', function () {
           break;
         } else {
           $order->add_order_note(sprintf('Charged %g to gift card %s (tid: %s, auth: %s)', $charge_amount, $code, $transaction_id, $auth_code));
-          $transactions[$code] = array('auth_code' => $auth_code,'amount' => $charge_amount);
+          $transactions[$code] = array('auth_code' => $auth_code, 'amount' => $charge_amount);
         }
       }
 
@@ -356,7 +356,7 @@ add_action('plugins_loaded', function () {
         throw new Exception('Your gift card balance has changed, please review the totals again');
       }
     }, 10, 2);
-
+    
     // If the order failed, restore the gift card
     add_action('woocommerce_order_status_changed', function ($id, $old_status, $new_status) use ($clog, $refund_cards) {
       $cards = WC()->session->get('gift_cards') ?: array();
@@ -377,7 +377,7 @@ add_action('plugins_loaded', function () {
 
     // Woo integration - payment calculations
     // --------------------------------------
-	
+
     add_filter('woocommerce_calculated_total', function ($total) use ($get_balance) {
       $cards = WC()->session->get('gift_cards') ?: array();
       $charge_amount_total = 0;
@@ -401,24 +401,24 @@ add_action('plugins_loaded', function () {
 
     // Woo integration - gift card output
     // ----------------------------------
-	
+
     $add_gift_card_lines = function () use ($get_balance, $shorten) {
       $cards = WC()->session->get('gift_cards') ?: array();
       $url = is_checkout() ? WC()->cart->get_checkout_url() : WC()->cart->get_cart_url();
 
       if (count($cards) > 0) {
         ?><tr>
-          <th>Total before gift card<?php echo count($cards) > 1 ? 's' : '' ?></th>
+          <th>Total before gift card<?php echo count($cards) > 1 ? 's' : ''?></th>
           <td><?php echo wc_price(WC()->cart->total + array_sum($cards)); ?></td>
         </tr><?php
-		
+
         foreach ($cards as $code => $charge_amount) :
           $remove_a = '';
         ?><tr>
             <th>Gift card ending in <?php echo $shorten($code) ?></th>
             <td>
               -<?php echo wc_price($charge_amount); ?>
-              <a href="<?php echo esc_url(add_query_arg('remove_gift_card', urlencode($code) , $url)) ?>" class="remove-gift-card">[Remove]</a>
+              <a href="<?php echo esc_url(add_query_arg('remove_gift_card', urlencode($code), $url)) ?>" class="remove-gift-card">[Remove]</a>
             </td>
           </tr>
         <?php endforeach;
