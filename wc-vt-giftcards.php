@@ -152,6 +152,17 @@ add_action('plugins_loaded', function () {
 
     $api_call = function ($method, $id, $card, $extra_args = array()) use ($vc) {
       $ch = curl_init();
+
+      // add pin to session var
+      if (isset($_POST['gift_card_pin']))
+      {
+        $pincode = $_POST['gift_card_pin'];
+        WC()->session->set('pin_code', $pincode);
+      }
+
+      // add pin to card #
+      $pincode_tmp = WC()->session->get('pin_code');
+      $card = $card . '=' . $pincode_tmp;
       $args = array_merge(array(
         'ClientKey' => $vc->get_option('client_key'),
         'TerminalID' => $vc->get_option('terminal_id'),
@@ -307,7 +318,10 @@ add_action('plugins_loaded', function () {
         $order->add_order_note($note);
       }
     };
-
+	
+    //WC()->session = new WC_Session_Handler();
+    //WC()->session->init();
+	
     // Charge the gift card before other payments
     add_action('woocommerce_checkout_order_processed', function ($id, $posted) use ($do_sale, $refund_cards, $tid) {
       $cards = WC()->session->get('gift_cards') ?: array();
@@ -388,7 +402,7 @@ add_action('plugins_loaded', function () {
     // Woo integration - gift card output
     // ----------------------------------
 
-    $add_gift_card_lines = function () use ($get_balance, $shorten) { 
+    $add_gift_card_lines = function () use ($get_balance, $shorten) {
       $cards = WC()->session->get('gift_cards') ?: array();
       $url = is_checkout() ? WC()->cart->get_checkout_url() : WC()->cart->get_cart_url();
 
@@ -411,6 +425,7 @@ add_action('plugins_loaded', function () {
       }
     };
 
+    // Add form to cart/checkout page
     add_action('woocommerce_cart_totals_before_order_total', $add_gift_card_lines);
     add_action('woocommerce_review_order_before_order_total', $add_gift_card_lines);
 
@@ -425,27 +440,55 @@ add_action('plugins_loaded', function () {
         );
       }
 
-      return array_slice($rows, 0, count($rows) - 1, true)
-        + $coupon_entries
-        + array_slice($rows, count($rows) - 1, 1, true);
+      return array_slice($rows, 0, count($rows) - 1, true) 
+	    + $coupon_entries 
+		+ array_slice($rows, count($rows) - 1, 1, true);
     }, 10, 2);
 
     // Woo integration - gift card form
     // --------------------------------
-
+	
     $cart_hook = apply_filters('woocommerce_valutec_gift_cards_hook', 'woocommerce_after_cart_totals');
+    $checkout_hook = apply_filters('woocommerce_valutec_gift_cards_hook', 'woocommerce_before_checkout_form');
 
     add_action($cart_hook, function () { // TODO what if plugin is deactivated during order
       if (WC()->cart->needs_payment()) {
         $button_classes = apply_filters('woocommerce_valutec_gift_cards_btnclass', ['apply-gift-card', 'button']);
         do_action('woocommerce_valutec_gift_cards_before_form');
-        ?><form action="<?php echo esc_url( WC()->cart->get_cart_url() ); ?>" method="post" class="apply-gift-card">
-          <input type="text" name="gift_card_code" value="" placeholder="Gift card number"/>
-          <input type="submit" class="<?php echo join(' ', $button_classes) ?>" name="update_cart" value="Apply gift card" />
-          <?php wp_nonce_field( 'woocommerce-cart' ); ?>
-        </form><?php
+        ?><div class="gift-cards" id="gift-cards">
+	      <p><strong>Have a gift card you'd like to use towards your purchase?</strong><br class="break">
+          Enter your gift card number below to apply towards your total purchase amount.</p>
+          <form action="<?php echo esc_url(WC()->cart->get_checkout_url()); ?>" method="post" class="apply-gift-card">
+          <input type="text" name="gift_card_code" value="" placeholder="Gift card number" />
+          <input type="text" name="gift_card_pin" value="" size="8" maxlength="8" placeholder="8 Digit PIN" />
+          <input type="submit" class="apply-gift-card button" name="update_cart" value="Apply Gift Card" />
+          <?php wp_nonce_field('woocommerce-cart'); ?>
+        </form></div><?php
         do_action('woocommerce_valutec_gift_cards_after_form');
       }
+    });
+
+    add_action($checkout_hook, function () { // TODO what if plugin is deactivated during order
+      if (WC()->cart->needs_payment()) {
+        $button_classes = apply_filters('woocommerce_valutec_gift_cards_btnclass', ['apply-gift-card', 'button']);
+        do_action('woocommerce_valutec_gift_cards_before_form');
+        ?><div class="gift-cards" id="gift-cards">
+	      <p><strong>Have a gift card you'd like to use towards your purchase?</strong><br class="break">
+          Enter your gift card number below to apply towards your total purchase amount.</p>
+          <form action="<?php echo esc_url(WC()->cart->get_checkout_url()); ?>" method="post" class="apply-gift-card">
+          <input type="text" name="gift_card_code" value="" placeholder="Gift card number" />
+          <input type="text" name="gift_card_pin" value="" size="8" maxlength="8" placeholder="8 Digit PIN" />
+          <input type="submit" class="apply-gift-card button" name="update_cart" value="Apply Gift Card" />
+          <?php wp_nonce_field('woocommerce-cart'); ?>
+        </form></div><?php
+        do_action('woocommerce_valutec_gift_cards_after_form');
+      }
+    });
+
+    add_action('woocommerce_review_order_before_payment', function () {
+	?>
+	<h4><strong>Forget to add Gift Card?&nbsp;&nbsp;</strong><a href="#gift-cards" class="apply-gift-card button">Click here</a></h4><br>
+	<?php
     });
 
     // It looks terrible to do this in wp_loaded with no regard to what page we're
@@ -458,6 +501,10 @@ add_action('plugins_loaded', function () {
           $cards = WC()->session->get('gift_cards') ?: array();
           if (isset($cards[$code])) {
             wc_add_notice('That gift card has already been applied to the cart.');
+          }
+          // verify PIN entered
+          elseif (empty($_POST['gift_card_pin'])) {
+            wc_add_notice('Please supply a valid PIN.');
           } else {
             $balance = $get_balance($code);
 
@@ -474,6 +521,9 @@ add_action('plugins_loaded', function () {
             if (!isset($msg)) {
               $cards[$code] = 0; // charge amount will be determined in woocommerce_calculated_total
               WC()->session->set('gift_cards', $cards);
+              // add pin to session var
+              $pincode = $_POST['gift_card_pin'];
+              WC()->session->set('pin_code', $pincode);
               wc_add_notice('Gift card applied successfully! It will be charged at checkout');
             } else {
               wc_add_notice($msg, 'error');
@@ -489,6 +539,7 @@ add_action('plugins_loaded', function () {
         $code = $_GET['remove_gift_card'];
         if (isset($cards[$code])) {
           unset($cards[$code]);
+          unset($pincode);
           wc_add_notice('Gift card removed');
           WC()->session->set('gift_cards', $cards);
         }
